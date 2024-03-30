@@ -1,0 +1,138 @@
+@import url('https://fonts.googleapis.com/css2?family=Jost:wght@400&display=swap');
+body {
+    font-family: "Roboto";
+    margin: 0; 
+    padding: 0;
+    overflow-x: hidden; 
+    width: 100%;
+}
+
+#header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: auto;
+    background-color: white;
+    height: 60px;
+}
+
+.hero{
+    background-color: #37517E;
+    width: 100%;
+    height: 760px;  
+}
+
+.hero-container {
+    padding: 153px 81px 83px 82px; 
+}
+
+.hero button{
+    background-color: #47B2E4;
+    color: white;
+    border: none;
+    padding: 9px, 28.36px, 12px, 28px;
+    width: 147.36px;
+    height: 45px;
+    font-size: 16px;
+    font-weight: 500;
+    line-height: 24px;
+    letter-spacing: 1px;
+    font-weight: 500;
+    border-radius: 50px;
+    margin-top: 57.8px;
+    margin-left: 0px;
+    cursor: pointer;
+}
+
+.subscribe-button {
+    background-color: #47b2e4;
+    color: white;
+    border: none;
+    border-radius: 50px;
+    padding: 9.25px, 20.02px, 9.25px, 19px;
+    width: 113.02px;
+    height: 42.5px;
+    font-size: 16px;
+    margin-left: -50px;
+    box-shadow: 0 2px 15px rgba(0, 0, 0, 0.06);
+}
+
+.news-form {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-top: 22px;
+    padding: 6px, 110px, 6px, 10px;
+    height: 42.5px;
+    margin-bottom: 22px;
+}
+
+.news-input {
+    align-items: center;
+    justify-content: center;
+    padding: 10px 20px;
+    border-radius: 50px;
+    border: none;
+    align-items: center;
+    background-color: white;
+    width: 516px;
+    height: 38px;
+    box-shadow: 0 2px 15px rgba(0, 0, 0, 0.06);
+}
+
+.footer-h1{
+    font-weight: 600;
+    font-size: 28px;
+    line-height: 28px;
+    color: #37517E;
+    margin: 0;
+    padding: 0;
+}
+
+.footer-p{
+    font-weight: 400;
+    font-size: 14px;
+    list-style: 24px;
+    color: #5e5e5e; 
+    margin: 0;
+    padding: 8px 0 0 0;
+}
+
+.footer-h2{
+    font-size: 16px;
+    font-weight: 700;
+    line-height: 19.2px;
+    color: #37517E;
+    margin: 0 0 18.19px 0;
+    padding: 0;
+}
+
+.footer-a{
+    font: "Open Sans";
+    font-size: 14px;
+    font-weight: 400;
+    line-height: 14px;
+    color: #777777;
+    margin-top: 12px;
+    padding: 1px 0 13px 0;
+    text-decoration: none;
+}
+
+.desc1{
+    margin-top: 26px;
+    color: #777777;
+    font-weight: 400;
+    font-size: 14px;
+    list-style: 24px;
+    line-height: 21px;
+    font: "Open Sans";
+}
+
+.circle {
+    width: 36px;
+    height: 36px;
+    background-color: #47b2e4;
+    border-radius: 50%;
+    margin-top: 17px;
+    margin-right: 7.64px;
+}
