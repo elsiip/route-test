@@ -7,8 +7,8 @@ import ProductForm from '../../components/productForm';
 import ProductList from '../../components/productList';
 import ProductDetailPage from './productDetail';
 import { v4 as uuidv4 } from 'uuid'; // Import UUID library for generating unique IDs
-import { Routes, Route, useNavigate } from 'react-router-dom'; // Import Routes and Route
-
+import { Route } from 'react-router-dom'; // Import Route
+import { useNavigate } from 'react-router-dom';
 
 export default function Product() {
     const navigate = useNavigate();
@@ -20,15 +20,15 @@ export default function Product() {
 
     const addProduct = (product) => {
         const newProduct = { id: uuidv4(), ...product }; // Add ID using UUID
-        setProducts([...products, newProduct]);
-        updateLocalStorage([...products, newProduct]);
+        const updatedProducts = [...products, newProduct];
+        setProducts(updatedProducts);
+        updateLocalStorage(updatedProducts);
     };
 
     const deleteProduct = (productId) => {
         const updatedProducts = products.filter(product => product.id !== productId);
         setProducts(updatedProducts);
-        // Update local storage
-        localStorage.setItem('products', JSON.stringify(updatedProducts));
+        updateLocalStorage(updatedProducts);
     };
 
     const editProduct = (productId) => {
@@ -38,6 +38,11 @@ export default function Product() {
     };
 
     const saveEditedProduct = (editedProduct) => {
+        const updatedProducts = products.map(product =>
+            product.id === editedProduct.id ? editedProduct : product
+        );
+        setProducts(updatedProducts);
+        updateLocalStorage(updatedProducts);
         setProductEditMode(false);
         setProductsEditing(null);
     };
@@ -66,11 +71,8 @@ export default function Product() {
                     </div>
                 </div>
             </section>
-
-            <Routes>
-                <Route path="/" element={<ProductList products={products} deleteProduct={deleteProduct} editProduct={editProduct} setSelectedProduct={setSelectedProduct} />} />
-                <Route path="/create-product/:id" element={<ProductDetailPage products={products} />} />
-            </Routes>
+            
+            <ProductList products={products} deleteProduct={deleteProduct} editProduct={editProduct} setSelectedProduct={setSelectedProduct} />
         </div>
     );
 }
