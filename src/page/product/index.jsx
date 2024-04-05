@@ -1,61 +1,14 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import styles from "../../assets/css/styles.module.css";
 import 'bootstrap/dist/css/bootstrap.min.css';
 import Navbar from '../../components/navbar';
 import Header from '../../components/headerCreateProduct';
 import ProductForm from '../../components/productForm';
 import ProductList from '../../components/productList';
-import ProductDetailPage from './productDetail';
-import { v4 as uuidv4 } from 'uuid'; // Import UUID library for generating unique IDs
-import { Route } from 'react-router-dom'; // Import Route
-import { useNavigate } from 'react-router-dom';
+import { connect } from 'react-redux';
+import { addProduct, deleteProduct, editProduct, setEditMode, setProductEditing } from '../../redux/actions'; // Import action creators
 
-export default function Product() {
-    const navigate = useNavigate();
-
-    const [products, setProducts] = useState([]);
-    const [productsEditing, setProductsEditing] = useState(null);
-    const [productEditMode, setProductEditMode] = useState(false);
-    const [selectedProduct, setSelectedProduct] = useState(null);
-
-    const addProduct = (product) => {
-        const newProduct = { id: uuidv4(), ...product }; // Add ID using UUID
-        const updatedProducts = [...products, newProduct];
-        setProducts(updatedProducts);
-        updateLocalStorage(updatedProducts);
-    };
-
-    const deleteProduct = (productId) => {
-        const updatedProducts = products.filter(product => product.id !== productId);
-        setProducts(updatedProducts);
-        updateLocalStorage(updatedProducts);
-    };
-
-    const editProduct = (productId) => {
-        const productToEdit = products.find(product => product.id === productId);
-        setProductsEditing(productToEdit);
-        setProductEditMode(true);
-    };
-
-    const saveEditedProduct = (editedProduct) => {
-        const updatedProducts = products.map(product =>
-            product.id === editedProduct.id ? editedProduct : product
-        );
-        setProducts(updatedProducts);
-        updateLocalStorage(updatedProducts);
-        setProductEditMode(false);
-        setProductsEditing(null);
-    };
-
-    const updateLocalStorage = (updatedProducts) => {
-        localStorage.setItem('products', JSON.stringify(updatedProducts));
-    };
-
-    useEffect(() => {
-        const storedProducts = JSON.parse(localStorage.getItem('products')) || [];
-        setProducts(storedProducts);
-    }, []);
-
+function Product({ products, addProduct, deleteProduct, editProduct, productEditMode, productsEditing, setEditMode, setProductEditing }) {
     return (
         <div className={styles['body']}>
             <Navbar />
@@ -65,14 +18,29 @@ export default function Product() {
                         <Header />
                         <div className="font col-xl-12 mt-5">
                             <div className="container" style={{ maxWidth: '656px', height: 'auto' }}>
-                                <ProductForm onAddProduct={addProduct} productsEditing={productsEditing} productEditMode={productEditMode} saveEditedProduct={saveEditedProduct} />
+                                <ProductForm addProduct={addProduct} editProduct={editProduct} productEditMode={productEditMode} productEditing={productsEditing} /> {/* Pass productsEditing to ProductForm */}
                             </div>
                         </div>
                     </div>
                 </div>
             </section>
-            
-            <ProductList products={products} deleteProduct={deleteProduct} editProduct={editProduct} setSelectedProduct={setSelectedProduct} />
+            <ProductList products={products} deleteProduct={deleteProduct} editProduct={editProduct} setEditMode={setEditMode} setProductEditing={setProductEditing} /> {/* Pass setEditMode and setProductEditing to ProductList */}
         </div>
     );
 }
+
+const mapStateToProps = (state) => ({
+    products: state.products,
+    productEditMode: state.productEditMode,
+    productsEditing: state.productsEditing // Retrieve productsEditing from Redux state
+});
+
+const mapDispatchToProps = {
+    addProduct,
+    deleteProduct,
+    editProduct,
+    setEditMode, // Include setEditMode action creator
+    setProductEditing // Include setProductEditing action creator
+};
+
+export default connect(mapStateToProps, mapDispatchToProps)(Product);
