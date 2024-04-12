@@ -86,7 +86,7 @@ function ProductList({ products, deleteProduct, editProduct, setEditMode, setPro
                   <td>{product.productPrice}</td>
                   <td>
                     <button className="btn btn-danger me-2" onClick={() => handleDelete(product.id)}>Delete</button>
-                    <button className="btn btn-success" onClick={() => handleEdit(product.id)}>Edit</button>
+                    <button className="btn btn-success" onClick ={() => {dispatch(setEditMode(true)); dispatch(editProduct(product));}}>Edit</button>
                   </td>
                 </tr>
               ))}

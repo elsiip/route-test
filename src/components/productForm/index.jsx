@@ -175,20 +175,17 @@ function ProductForm({ addProduct, editProduct, productEditMode, productEditing}
         // Reset form or clear form fields
       };
     
-      useEffect(() => {
-        // Populate form fields with product data when editing mode is active
+    useEffect(() => {
         if (productEditMode && productEditing) {
-            setProductName(productEditing.productName || ''); // Pastikan untuk menambahkan default value ''
-            setProductCategory(productEditing.productCategory || ''); // Pastikan untuk menambahkan default value ''
-            setProductFreshness(productEditing.productFreshness || ''); // Pastikan untuk menambahkan default value ''
-            setAddDesc(productEditing.addDesc || ''); // Pastikan untuk menambahkan default value ''
-            setProductPrice(productEditing.productPrice || ''); // Pastikan untuk menambahkan default value ''
+            setProductName(productEditing.name);
+            setProductCategory(productEditing.category);
+            setImageProduct(productEditing.image);
+            setAddDesc(productEditing.addDesc);
+            setProductFreshness(productEditing.freshness);
+            setProductPrice(productEditing.price);
         }
-    }, [productEditMode, productEditing]);
+    }, [productEditing, productEditMode]);
     
-    
-
-
     return (
         <div>
             <h3 className="font-weight-medium color-primary">Detail Product</h3>
@@ -196,12 +193,12 @@ function ProductForm({ addProduct, editProduct, productEditMode, productEditing}
                 <div className="row">
                     <div className="form-group" style={{ width: '300px' }}>
                         <label htmlFor="productName" className="font-weight-normal text-form color-primary mt-2 mb-2">Product Name</label>
-                        <input type="text" className="form-control" id="productName" name="productName" value={productName} onChange={handleProductNameChange} required />
+                        <input type="text" className="form-control" id="productName" name="productName" value={productEditing ? productEditing.name : null} onChange={handleProductNameChange} required />
                         {productNameError && <div className="text-danger">{productNameError}</div>}
                     </div>
                     <div className="form-group">
                         <label htmlFor="productCategory" className="font-weight-normal text-form color-primary mt-2 mb-2">Product Category</label>
-                        <select className="form-select mb-3" id="productCategory" name="productCategory" style={{ width: '244px', height: '38px' }}>
+                        <select className="form-select mb-3" id="productCategory" name="productCategory" style={{ width: '244px', height: '38px' }} value={productEditing ? productEditing.category : null}>
                             <option selected value="Choose...">Choose...</option>
                             <option value="Electronics">Electronics</option>
                             <option value="Fashion">Fashion</option>
@@ -212,6 +209,7 @@ function ProductForm({ addProduct, editProduct, productEditMode, productEditing}
                     <div className="col-sm-7 mb-3">
                         <label htmlFor="inputGroupFile" className="form-label">Image of Product</label>
                         <div className="input-group custom-file-button">
+                            {productEditing && productEditing.image && <img src={URL.createObjectURL(productEditing.image)} alt="Product" />}
                             {/* <label htmlFor="inputGroupFile" className="input-group-text bg-primary text-white">Choose File</label> */}
                             <input type="file" className="form-control " id="imageProduct" data-name="Image Product" name='imageProduct' onChange={(e) => setImageProduct(e.target.files[0])} required />
                         </div>
@@ -221,19 +219,19 @@ function ProductForm({ addProduct, editProduct, productEditMode, productEditing}
                         <div className="form-group">
                             <label htmlFor="" className="font-weight-normal text-form color-primary mt-2 mb-2">Product Freshness</label>
                             <div className="form-check">
-                                <input className="form-check-input" type="radio" name="productFreshness" id="brandNew" value="Brand New" onChange={(e) => setProductFreshness(e.target.value)}  required />
+                                <input className="form-check-input" type="radio" name="productFreshness" id="brandNew" value="Brand New" checked={productEditing ? productEditing.option === 'Brand New' : null} onChange={(e) => setProductFreshness(e.target.value)}  required />
                                 <label className="form-check-label" htmlFor="productFreshness">
                                     Brand New
                                 </label>
                             </div>
                             <div className="form-check">
-                                <input className="form-check-input" type="radio" name="productFreshness" id="secondHand" value="Second Hand" required />
+                                <input className="form-check-input" type="radio" name="productFreshness" id="secondHand" value="Second Hand" checked={productEditing ? productEditing.option === 'Second Hand' : null} required />
                                 <label className="form-check-label" htmlFor="productFreshness">
                                     Second hand
                                 </label>
                             </div>
                             <div className="form-check">
-                                <input className="form-check-input" type="radio" name="productFreshness" id="refurbished" value="Refurbished" required />
+                                <input className="form-check-input" type="radio" name="productFreshness" id="refurbished" value="Refurbished" checked={productEditing ? productEditing.option === 'Refurbished' : null} required />
                                 <label className="form-check-label" htmlFor="productFreshness">
                                     Refurbished
                                 </label>
@@ -244,13 +242,13 @@ function ProductForm({ addProduct, editProduct, productEditMode, productEditing}
                     <div className="col-sm-12">
                         <div className="form-group">
                             <label htmlFor="addDesc" className="font-weight-normal text-form color-primary mt-2 mb-2">Additional Description</label>
-                            <textarea name="addDesc" className="form-control" id="addDesc" style={{ width: '603px', height: '116px' }} required></textarea>
+                            <textarea name="addDesc" className="form-control" id="addDesc" style={{ width: '603px', height: '116px' }} value={productEditing ? productEditing.addDesc : null}  required></textarea>
                             {addDescError && <div className="text-danger">{addDescError}</div>}
                         </div>
                     </div>
                     <div className="form-group" style={{ width: '300px' }}>
                         <label htmlFor="productPrice" className="font-weight-normal text-form color-primary mt-2 mb-2">Product Price</label>
-                        <input type="text" className="form-control" id="productPrice" name='productPrice' style={{ width: '603px' }} placeholder="$1" required />
+                        <input type="text" className="form-control" id="productPrice" name='productPrice' style={{ width: '603px' }} placeholder="$1" value={productEditing ? productEditing.price : null}  required />
                         {productPriceError && <div className="text-danger">{productPriceError}</div>}
                     </div>
                     <div className="text-center d-flex justify-content-center">
@@ -262,6 +260,17 @@ function ProductForm({ addProduct, editProduct, productEditMode, productEditing}
                     <div className="text-center d-flex justify-content-center">
                         <button type="button" className="btn btn-secondary my-4" onClick={handleButtonClick} style={{ width: '600px', height: '48px' }}>Generate Random Number</button>
                     </div>
+
+                    {productEditMode && <button onClick={() => { dispatch(editProduct({
+                        ...productEditing,
+                        name: productName,
+                        category: productCategory,
+                        image: imageProduct,
+                        freshness: productFreshness,
+                        price: productPrice,
+                    }));
+                    dispatch(setEditMode(false));}}
+                    >Save Edit</button>}
                 </div>
             </form>
         </div>
