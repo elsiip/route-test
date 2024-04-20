@@ -1,191 +1,172 @@
 import React, { useState, useEffect } from 'react';
-import 'bootstrap/dist/css/bootstrap.min.css';
-import styles from "../../assets/css/styles.module.css";
-import {v4 as uuidv4} from  'uuid'
-import { connect } from 'react-redux';
-import { useDispatch } from 'react-redux';
-import { addProduct, editProduct, deleteProduct, setEditMode } from '../../redux/actions';
 
-function ProductForm({ addProduct, editProduct, productEditMode, productEditing}) {
-    const dispatch = useDispatch();
-    const [productName, setProductName] = useState('');
-    const [productCategory, setProductCategory] = useState('');
-    const [imageProduct, setImageProduct] = useState('');
-    const [productFreshness, setProductFreshness] = useState('');
-    const [addDesc, setAddDesc] = useState('');
-    const [productPrice, setProductPrice] = useState('');
+function ProductForm({ tambahProduk, produkSedangEdit, editMode, simpanEditProduk}){
+    const [formData, setFormData] = useState({
+        productName: '',
+        productCategory: '',
+        productFreshness: '',
+        productPrice: '',
+        image: '',
+        additionalDescription: ''
+    });
+
     const [productNameError, setProductNameError] = useState('');
     const [productCategoryError, setProductCategoryError] = useState('');
     const [imageProductError, setImageProductError] = useState('');
     const [productFreshnessError, setProductFreshnessError] = useState('');
     const [addDescError, setAddDescError] = useState('');
     const [productPriceError, setProductPriceError] = useState('');
-    const [productsEditing, setProductsEditing] = useState(false);
 
-    const handleSubmit = (event) => {
-    event.preventDefault();
-    const form = event.currentTarget;
+    useEffect(() => {
+        if (produkSedangEdit) {
+            setFormData(produkSedangEdit);
+        }
+    }, [produkSedangEdit]);
 
-    // Exploration, number 1
-    let isValid = true;
-    let selectedFreshness = false; // Menyimpan status apakah opsi kesegaran dipilih
+    const handleChange = (e) => {
+        const { name, value, type, files } = e.target;
+        setFormData(prevState => ({
+            ...prevState,
+            [name]: value
+        }));
 
-    for (let key in form.elements) {
-        if (form.elements[key].nodeName === 'INPUT' || form.elements[key].nodeName === 'SELECT' || form.elements[key].nodeName === 'TEXTAREA') {
-            const input = form.elements[key];
-            if (input.value.trim() === '' || (input.nodeName === 'SELECT' && input.value === 'Choose...')) {
-                isValid = false;
-                input.classList.add('is-invalid');
-                if (input.name === 'productName') {
-                    setProductNameError('Please enter a valid product name.');
-                } else if (input.name === 'productCategory') {
-                    setProductCategoryError('Please select a product category.');
-                } else if (input.name === 'productPrice') {
-                    setProductPriceError('Please enter a valid price in the format xx.xx.');
-                } else if (input.name === 'addDesc') {
-                    setAddDescError('Please enter additional description.');
-                }
+        const nameRegex = /^[a-zA-Z0-9\s]+$/;
+        const priceRegex = /^\d+(\.\d{1,2})?$/;
+
+        if (name === 'productName') {
+            if (!nameRegex.test(value)) {
+                setProductNameError('Product Name must contain only letters, numbers, and spaces.');
+            } else if (value.length > 25) {
+                setProductNameError('Product Name must not exceed 25 characters.');           
+            } else if (value.length > 10) {
+                setProductNameError('Product Name must not exceed 10 characters.');
+            }else if (value === '') {
+                setProductNameError('Please enter a valid product name.');
             } else {
-                input.classList.remove('is-invalid');
-                if (input.name === 'productName') {
-                    setProductNameError('');
-                } else if (input.name === 'productCategory') {
-                    setProductCategoryError('');
-                } else if (input.name === 'productPrice') {
-                    setProductPriceError('');
-                } else if (input.name === 'addDesc') {
-                    setAddDescError('');
-                }
-            }
-
-            // Check if a freshness option is selected
-            if (input.name === 'productFreshness' && input.checked) {
-                selectedFreshness = true;
+                setProductNameError('');
             }
         }
-    }
 
-    // Validation for image input
-    const imageInput = form.elements['imageProduct'];
-    if (!imageInput.files[0]) {
-        isValid = false;
-        setImageProductError('Please select an image.'); // Pesan error jika gambar tidak dipilih
-        imageInput.classList.add('is-invalid'); // Tambahkan kelas untuk border merah
-    } else {
-        const allowedExtensions = /(\.jpg|\.jpeg|\.png)$/i;
-        if (!allowedExtensions.exec(imageInput.value)) {
-            isValid = false;
-            setImageProductError('Please upload an image with JPG, JPEG, or PNG format.'); // Pesan error jika format gambar tidak valid
-            imageInput.classList.add('is-invalid'); // Tambahkan kelas untuk border merah
-        } else {
-            setImageProductError('');
-            imageInput.classList.remove('is-invalid'); // Hapus kelas untuk border merah jika valid
+        if (name === 'productPrice') {
+            if (!priceRegex.test(value)) {
+                setProductPriceError('Please enter a valid price.');
+            } else {
+                setProductPriceError('');
+            }
         }
-    }
 
-    // Check if a freshness option is selected
-    if (!selectedFreshness) {
-        isValid = false;
-        setProductFreshnessError('Please select the freshness of the product.'); // Pesan error jika tidak ada opsi kesegaran yang dipilih
-    } else {
-        setProductFreshnessError('');
-    }
-
-    // If form is valid, proceed with form submission
-    if (isValid) {
-        const productId = uuidv4();
-        const product = {
-            id: productId,
-            productName: form['productName'].value,
-            productCategory: form['productCategory'].value,
-            imageProduct: imageProduct,
-            productFreshness: form['productFreshness'].value,
-            addDesc: form['addDesc'].value,
-            productPrice: form['productPrice'].value,
-        };
-        console.log('Product data:', product)
-        // Call the prop onAddProduct and pass the product data
-        // onAddProduct(product);
-        if (productEditMode) {
-            editProduct(product);
-        } else {
-            addProduct(product);
+        if (name === 'productCategory') {
+            if (value === '') {
+                setProductCategoryError('Please select a product category.');
+            } else {
+                setProductCategoryError('');
+            }
         }
         
-        form.reset();
-    }
-};
-
-    //Priority 2
-    const handleProductNameChange = (event) => {
-        const value = event.target.value;
-        setProductName(value);
-    
-        if (value.length > 25) {
-            alert('Product name cannot exceed 25 characters');
-            setProductNameError('Product name cannot exceed 25 characters');
-        } else if (value.length > 10) {
-            setProductNameError('Product name cannot exceed 10 characters');
-        } else if (value.length === 0) {
-            // Validasi jika field kosong
-            setProductNameError('Please enter a valid product name.');
+        if (name === 'productFreshness') {
+            if (value === '') {
+                setProductFreshnessError('Please select a product freshness.');
+            } else {
+                setProductFreshnessError('');
+            }
+        }    
+        if(name == 'addDesc'){
+            if(value.length > 100){
+                setAddDescError('Additional Description must not exceed 100 characters.');
+            } else {
+                setAddDescError('');
+            }
+        }
+        if (name === 'imageProduct') {
+            const allowedExtensions = /(\.jpg|\.jpeg|\.png)$/i;
+            if (!allowedExtensions.test(files[0].name)) {
+                setProductImageError('Please upload an image with JPG, JPEG, or PNG format.');
+            } else {
+                setProductImageError('');
+            }
+            setFormData(prevState => ({
+                ...prevState,
+                [name]: files[0]
+            }));
+        }
+        
+        if (type === 'file') {
+            setFormData(prevState => ({
+                ...prevState,
+                [name]: files[0]
+            }));
         } else {
-            setProductNameError('');
+            setFormData(prevState => ({
+                ...prevState,
+                [name]: value
+            }));
         }
     };
 
-    // Priority 1, Number 1
+    const handleSubmit = (e) => {
+    e.preventDefault();
+    
+    let errors = {};
+
+    if (formData.productName === '') {
+        errors.productName = 'Please enter a valid product name.';
+    }
+    if (!formData.productCategory) {
+        errors.productCategory = 'Please select a product category.';
+    }
+    if (!formData.productFreshness) {
+        errors.productFreshness = 'Please select a product freshness.';
+    }
+    if (!formData.imageProduct) {
+        errors.imageProduct = 'Please upload an image.';
+    }
+    if (formData.productPrice === '') {
+        errors.productPrice = 'Please enter a valid price.';
+    }
+    if (formData.addDesc === '') {
+        errors.addDesc = 'Please enter additional description.';
+    }
+
+    if (Object.keys(errors).length > 0) {
+        setProductNameError(errors.productName || '');
+        setProductCategoryError(errors.productCategory || '');
+        setProductFreshnessError(errors.productFreshness || '');
+        setImageProductError(errors.imageProduct || '');
+        setProductPriceError(errors.productPrice || '');
+        setAddDescError(errors.addDesc || '');
+        return;
+    }
+
+    if (editMode) {
+        simpanEditProduk(formData); 
+    } else {
+        tambahProduk(formData);
+    }
+
+    setFormData({
+        productName: '',
+        productCategory: '',
+        productFreshness: '',
+        addDesc: '',
+        productPrice: '',
+        imageProduct: null 
+    });
+
+    // Reset all errors
+    setProductNameError('');
+    setProductCategoryError('');
+    setProductFreshnessError('');
+    setImageProductError('');
+    setProductPriceError('');
+    setAddDescError('');
+};
+
+    
     const handleButtonClick = () => {
-        const randomNumber = Math.floor(Math.random() * 100) + 1; // Generate random number between 1 and 100
+        const randomNumber = Math.floor(Math.random() * 100) + 1; 
         console.log('Random number:', randomNumber);
     };
 
-    useEffect(() => {
-        const imageInput = document.getElementById('imageProduct');
-
-        const handleImageChange = () => {
-            const allowedExtensions = /\.(jpg|jpeg|png)$/i;
-            if (!allowedExtensions.test(imageInput.value)) {
-                setImageProductError('Please upload an image with JPG, JPEG, or PNG format.'); // Set error message if format is invalid
-                imageInput.classList.add('is-invalid'); // Add is-invalid class to display red border
-            } else {
-                setImageProductError('');
-                imageInput.classList.remove('is-invalid'); // Remove is-invalid class if format is valid
-            }
-        };
-
-        imageInput.addEventListener('change', handleImageChange);
-
-        // Clean up the event listener
-        return () => {
-            imageInput.removeEventListener('change', handleImageChange);
-        };
-    }, [imageProduct]);
-
-    const handleEditClick = () => {
-        // Dispatch action to set edit mode and populate form fields with product data
-        dispatch(setEditMode(true));
-        // You may need to dispatch an action to populate form fields with product data
-      };
-    
-      // Function to handle delete button click
-      const handleDeleteClick = () => {
-        // Dispatch action to delete product
-        dispatch(deleteProduct(productsEditing.id));
-        // Reset form or clear form fields
-      };
-    
-    useEffect(() => {
-        if (productEditMode && productEditing) {
-            setProductName(productEditing.name);
-            setProductCategory(productEditing.category);
-            setImageProduct(productEditing.image);
-            setAddDesc(productEditing.addDesc);
-            setProductFreshness(productEditing.freshness);
-            setProductPrice(productEditing.price);
-        }
-    }, [productEditing, productEditMode]);
-    
     return (
         <div>
             <h3 className="font-weight-medium color-primary">Detail Product</h3>
@@ -193,13 +174,13 @@ function ProductForm({ addProduct, editProduct, productEditMode, productEditing}
                 <div className="row">
                     <div className="form-group" style={{ width: '300px' }}>
                         <label htmlFor="productName" className="font-weight-normal text-form color-primary mt-2 mb-2">Product Name</label>
-                        <input type="text" className="form-control" id="productName" name="productName" value={productEditing ? productEditing.name : null} onChange={handleProductNameChange} required />
+                        <input type="text" className={`form-control ${productNameError ? 'is-invalid' : ''}`} id="productName" name="productName" value={formData.productName} onChange={handleChange} required />
                         {productNameError && <div className="text-danger">{productNameError}</div>}
                     </div>
                     <div className="form-group">
                         <label htmlFor="productCategory" className="font-weight-normal text-form color-primary mt-2 mb-2">Product Category</label>
-                        <select className="form-select mb-3" id="productCategory" name="productCategory" style={{ width: '244px', height: '38px' }} value={productEditing ? productEditing.category : null}>
-                            <option selected value="Choose...">Choose...</option>
+                        <select className={`form-select mb-3 ${productCategoryError ? 'is-invalid' : ''}`} id="productCategory" name="productCategory" style={{ width: '244px', height: '38px' }} value={formData.productCategory} onChange={handleChange} required >
+                            <option>Choose...</option>
                             <option value="Electronics">Electronics</option>
                             <option value="Fashion">Fashion</option>
                             <option value="Toys">Toys</option>
@@ -209,9 +190,8 @@ function ProductForm({ addProduct, editProduct, productEditMode, productEditing}
                     <div className="col-sm-7 mb-3">
                         <label htmlFor="inputGroupFile" className="form-label">Image of Product</label>
                         <div className="input-group custom-file-button">
-                            {productEditing && productEditing.image && <img src={URL.createObjectURL(productEditing.image)} alt="Product" />}
                             {/* <label htmlFor="inputGroupFile" className="input-group-text bg-primary text-white">Choose File</label> */}
-                            <input type="file" className="form-control " id="imageProduct" data-name="Image Product" name='imageProduct' onChange={(e) => setImageProduct(e.target.files[0])} required />
+                            <input type="file" className={`form-control ${imageProductError ? 'is-invalid' : ''}`} id="imageProduct" data-name="Image Product" name='imageProduct' onChange={handleChange} required />
                         </div>
                         {imageProductError && <div className="text-danger">{imageProductError}</div>}
                     </div>
@@ -219,20 +199,20 @@ function ProductForm({ addProduct, editProduct, productEditMode, productEditing}
                         <div className="form-group">
                             <label htmlFor="" className="font-weight-normal text-form color-primary mt-2 mb-2">Product Freshness</label>
                             <div className="form-check">
-                                <input className="form-check-input" type="radio" name="productFreshness" id="brandNew" value="Brand New" checked={productEditing ? productEditing.option === 'Brand New' : null} onChange={(e) => setProductFreshness(e.target.value)}  required />
-                                <label className="form-check-label" htmlFor="productFreshness">
+                                <input className="form-check-input" type="radio" name="productFreshness" id="brandNew" value="Brand New" checked={formData.productFreshness === 'Brand New'} onChange={handleChange}  required />
+                                <label className="form-check-label" htmlFor="brandNew">
                                     Brand New
                                 </label>
                             </div>
                             <div className="form-check">
-                                <input className="form-check-input" type="radio" name="productFreshness" id="secondHand" value="Second Hand" checked={productEditing ? productEditing.option === 'Second Hand' : null} required />
-                                <label className="form-check-label" htmlFor="productFreshness">
-                                    Second hand
+                                <input className="form-check-input" type="radio" name="productFreshness" id="secondHand" value="Second Hand" checked={formData.productFreshness === 'Second Hand'} onChange={handleChange} required />
+                                <label className="form-check-label" htmlFor="secondHand">
+                                    Second Hand
                                 </label>
                             </div>
                             <div className="form-check">
-                                <input className="form-check-input" type="radio" name="productFreshness" id="refurbished" value="Refurbished" checked={productEditing ? productEditing.option === 'Refurbished' : null} required />
-                                <label className="form-check-label" htmlFor="productFreshness">
+                                <input className="form-check-input" type="radio" name="productFreshness" id="refurbished" value="Refurbished" checked={formData.productFreshness === 'Refurbished'} onChange={handleChange} required />
+                                <label className="form-check-label" htmlFor="refurbished">
                                     Refurbished
                                 </label>
                             </div>
@@ -242,49 +222,25 @@ function ProductForm({ addProduct, editProduct, productEditMode, productEditing}
                     <div className="col-sm-12">
                         <div className="form-group">
                             <label htmlFor="addDesc" className="font-weight-normal text-form color-primary mt-2 mb-2">Additional Description</label>
-                            <textarea name="addDesc" className="form-control" id="addDesc" style={{ width: '603px', height: '116px' }} value={productEditing ? productEditing.addDesc : null}  required></textarea>
+                            <textarea name="addDesc" className={`form-control ${addDescError ? 'is-invalid' : ''}`} id="addDesc" style={{ width: '603px', height: '116px' }} value={formData.addDesc} onChange={handleChange}  required></textarea>
                             {addDescError && <div className="text-danger">{addDescError}</div>}
                         </div>
                     </div>
                     <div className="form-group" style={{ width: '300px' }}>
                         <label htmlFor="productPrice" className="font-weight-normal text-form color-primary mt-2 mb-2">Product Price</label>
-                        <input type="text" className="form-control" id="productPrice" name='productPrice' style={{ width: '603px' }} placeholder="$1" value={productEditing ? productEditing.price : null}  required />
+                        <input type="text" className={`form-control ${productPriceError ? 'is-invalid' : ''}`} id="productPrice" name='productPrice' style={{ width: '603px' }} placeholder="$1" value={formData.productPrice} onChange={handleChange} required />
                         {productPriceError && <div className="text-danger">{productPriceError}</div>}
                     </div>
                     <div className="text-center d-flex justify-content-center">
                         <button type="submit" className="btn btn-primary btn-create font-weight-normal" style={{ marginTop: '113px', width: '600px', height: '48px' }}>Submit</button>
                     </div>
-                    
-
-                    {/* Priority 1, Number 1 */}
-                    <div className="text-center d-flex justify-content-center">
-                        <button type="button" className="btn btn-secondary my-4" onClick={handleButtonClick} style={{ width: '600px', height: '48px' }}>Generate Random Number</button>
-                    </div>
-
-                    {productEditMode && <button onClick={() => { dispatch(editProduct({
-                        ...productEditing,
-                        name: productName,
-                        category: productCategory,
-                        image: imageProduct,
-                        freshness: productFreshness,
-                        price: productPrice,
-                    }));
-                    dispatch(setEditMode(false));}}
-                    >Save Edit</button>}
                 </div>
             </form>
+            <div className="text-center d-flex justify-content-center">
+                <button type="button" className="btn btn-secondary my-4" onClick={handleButtonClick} style={{ width: '600px', height: '48px' }}>Generate Random Number</button>
+            </div>
         </div>
     );
 }
 
-const mapDispatchToProps = {
-    addProduct,
-    editProduct,
-    deleteProduct,
-};
-
-const mapStateToProps = (state) => ({
-    productsEditing: state.productsEditing // Retrieve productsEditing from Redux state
-});
-
-export default connect(mapStateToProps, mapDispatchToProps)(ProductForm);
+export default ProductForm

@@ -1,58 +1,26 @@
-import styles from "../../assets/css/styles.module.css";
-import { Navigate } from 'react-router-dom'; // Import Navigate
+import React, { useState } from 'react';  // Tambahkan useState
+import { useNavigate } from "react-router-dom";
+import {v4 as uuidv4} from 'uuid';
 import 'bootstrap/dist/css/bootstrap.min.css';
-import { v4 as uuidv4 } from 'uuid';
-import React, { useState, useEffect } from 'react';
-import { connect } from 'react-redux';
-import { useDispatch } from 'react-redux';
-import { addProduct, deleteProduct, editProduct } from '../../redux/actions';
 
-function ProductList({ products, deleteProduct, editProduct, setEditMode, setProductEditing }) {
-  const [searchTerm, setSearchTerm] = useState('');
-  const dispatch = useDispatch();
-  const [filteredProducts, setFilteredProducts] = useState(products);
-  const [productsEditing, setProductsEditing] = useState(null); 
+function ProductList({ products, hapusProduk, editProduk }){
+  const navigate = useNavigate();
+  const [searchTerm, setSearchTerm] = useState(''); // 1. Tambahkan state untuk nilai inputan pencarian
 
-  const handleAddProduct = (newProduct) => {
-    dispatch(addProduct(newProduct));
-  };
-
-  useEffect(() => {
-    setFilteredProducts(products);
-  }, [products]);
-
-  const handleDelete = (id) => {
-    if (window.confirm('Are you sure you want to delete this product?')) {
-        deleteProduct(id);
-    }
-};
-
-  const handleSearch = (event) => {
-    const value = event.target.value;
-    setSearchTerm(value);
-
-    if (value !== '') {
-      const results = products.filter(product =>
-        product.productName.toLowerCase().includes(value.toLowerCase())
-      );
-      setFilteredProducts(results);
-    } else {
-      setFilteredProducts(products);
+  const konfirmasiHapus = (id) => {
+    if (window.confirm("Apakah Anda yakin ingin menghapus produk ini?")) {
+        hapusProduk(id);
     }
   };
 
   const handleEdit = (id) => {
-    const productToEdit = products.find(product => product.id === id);
-    if (productToEdit) {
-      dispatch(setEditMode(true));
-      dispatch(setProductEditing(productToEdit));
-    }
+    editProduk(id);
   };
-  
 
-  const handleProductClick = (id) => {
-    window.location.href = `/${id}`;
-  };
+  // 3. Modifikasi logika rendering untuk memfilter daftar produk berdasarkan pencarian
+  const filteredProducts = products.filter(product =>
+    product.productName.toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
   return (
     <div>
@@ -67,49 +35,30 @@ function ProductList({ products, deleteProduct, editProduct, setEditMode, setPro
                 <th scope="col">No</th>
                 <th scope="col">Product Name</th>
                 <th scope="col">Product Category</th>
-                <th scope="col">Image</th>
+                <th scope="col">Product Image</th>
                 <th scope="col">Product Freshness</th>
                 <th scope="col">Product Price</th>
                 <th scope="col">Action</th>
               </tr>
             </thead>
             <tbody>
-              {products.map((product, index) => (
-                <tr key={product.id}>
+              {filteredProducts.map((product, index) => (
+                <tr key={uuidv4()}>
                   <td>
-                    <button onClick={() => handleProductClick(product.id)} style={{ border: 'none', background: 'none', cursor: 'pointer' }}>{index + 1}</button>
+                    <button onClick={() => navigate(`/product/${product.id}`)} style={{ border: 'none', background: 'transparent', cursor: 'pointer' }}>{index + 1}</button>
                   </td>
                   <td>{product.productName}</td>
                   <td>{product.productCategory}</td>
-                  <td><img src={product.imageProduct} alt={product.productName} style={{ maxWidth: '100px' }} /></td>
+                  <td>{product.imageProduct}</td>
                   <td>{product.productFreshness}</td>
                   <td>{product.productPrice}</td>
                   <td>
-                    <button className="btn btn-danger me-2" onClick={() => handleDelete(product.id)}>Delete</button>
-                    <button className="btn btn-success" onClick ={() => {dispatch(setEditMode(true)); dispatch(editProduct(product));}}>Edit</button>
+                    <button type="button" className="btn btn-danger me-2" onClick={() => konfirmasiHapus(product.id)}>Delete</button>
+                    <button type="button" className="btn btn-success" onClick={() => handleEdit(product.id)}>Edit</button>
                   </td>
                 </tr>
               ))}
             </tbody>
-            {/* <tbody>
-            {filteredProducts.map((product, index) => (
-              <tr key={product.id}>
-                <td>
-                  <button onClick={() => handleProductClick(product.id)} style={{ border: 'none', background: 'none', cursor: 'pointer' }}>{index + 1}</button>
-                </td>
-                <td>{product.productName}</td>
-                <td>{product.productCategory}</td>
-                <td><img src={product.imageProduct} alt={product.productName} style={{ maxWidth: '100px' }} /></td>
-                <td>{product.productFreshness}</td>
-                <td>{product.productPrice}</td>
-                <td>
-                  <button className="btn btn-danger me-2" onClick={() => handleDelete(product.id)}>Delete</button>
-                  <button className="btn btn-success" onClick={() => handleEdit(product.id)}>Edit</button>
-                </td>
-              </tr>
-            ))}
-          </tbody> */}
-
           </table>
           <div style={{ marginTop: '-15px' }}>
             <input
@@ -118,9 +67,9 @@ function ProductList({ products, deleteProduct, editProduct, setEditMode, setPro
               id="search"
               placeholder="Search By Product Name"
               className='bg-white'
-              value={searchTerm}
-              onChange={handleSearch}
               style={{ width: '194px', height: '31px' }}
+              value={searchTerm} // 2. Menghubungkan inputan dengan state
+              onChange={(e) => setSearchTerm(e.target.value)} // 2. Tambahkan fungsi untuk menangani perubahan inputan
             /><br />
             <div className="btn-group" role="group" style={{ height: 'auto', width: '135px' }}>
               <input type="radio" className="btn-check btn-hover-primary" name="deleteButton" id="deleteButton" autoComplete="off" checked />
@@ -135,13 +84,4 @@ function ProductList({ products, deleteProduct, editProduct, setEditMode, setPro
   );
 }
 
-const mapStateToProps = (state) => ({
-  products: state.products,
-});
-
-const mapDispatchToProps = {
-  deleteProduct,
-  editProduct,
-};
-
-export default connect(mapStateToProps, mapDispatchToProps)(ProductList);
+export default ProductList;
