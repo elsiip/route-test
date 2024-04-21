@@ -1,26 +1,47 @@
-import React, { useState } from 'react';  // Tambahkan useState
-import { useNavigate } from "react-router-dom";
-import {v4 as uuidv4} from 'uuid';
+import React, { useState, useEffect } from 'react';
 import 'bootstrap/dist/css/bootstrap.min.css';
+import { useNavigate } from "react-router-dom";
+import axios from 'axios'; // Import axios
 
-function ProductList({ products, hapusProduk, editProduk }){
+function ProductList({produk, hapusProduk, editProduk }) {
   const navigate = useNavigate();
-  const [searchTerm, setSearchTerm] = useState(''); // 1. Tambahkan state untuk nilai inputan pencarian
+  const [products, setProducts] = useState(produk); // State untuk menyimpan data produk
+  const [searchTerm, setSearchTerm] = useState('');
 
-  const konfirmasiHapus = (id) => {
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const response = await axios.get('https://6624041b04457d4aaf9b7041.mockapi.io/products');
+        setProducts(response.data);
+      } catch (error) {
+        console.error('Error fetching data:', error);
+      }
+    };
+
+    fetchData();
+  }, [produk]); // Fetch data only once when component mounts
+
+  const konfirmasiHapus = async (id) => {
     if (window.confirm("Apakah Anda yakin ingin menghapus produk ini?")) {
-        hapusProduk(id);
+      try {
+        await axios.delete(`https://6624041b04457d4aaf9b7041.mockapi.io/products/${id}`);
+        const newProducts = products.filter(product => product.id !== id);
+        setProducts(newProducts);
+        alert("Produk berhasil dihapus");
+      } catch (error) {
+        console.error(error);
+        alert("Gagal menghapus produk");
+      }
     }
   };
 
   const handleEdit = (id) => {
-    editProduk(id);
+    editProduk(id); // Memanggil fungsi editProduk dengan ID produk sebagai argumen
   };
 
-  // 3. Modifikasi logika rendering untuk memfilter daftar produk berdasarkan pencarian
-  const filteredProducts = products.filter(product =>
-    product.productName.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  if (!products) {
+    return <div>Loading...</div>;
+  }
 
   return (
     <div>
@@ -42,19 +63,21 @@ function ProductList({ products, hapusProduk, editProduk }){
               </tr>
             </thead>
             <tbody>
-              {filteredProducts.map((product, index) => (
-                <tr key={uuidv4()}>
+              {products.map((product, index) => ( // Gunakan products untuk membuat daftar produk
+                <tr key={product.id}>
                   <td>
                     <button onClick={() => navigate(`/product/${product.id}`)} style={{ border: 'none', background: 'transparent', cursor: 'pointer' }}>{index + 1}</button>
                   </td>
                   <td>{product.productName}</td>
                   <td>{product.productCategory}</td>
-                  <td>{product.imageProduct}</td>
+                  <td>
+                    <img src={product.imageProduct} alt={product.productName} style={{ maxWidth: '100px', maxHeight: '100px' }} />
+                  </td>
                   <td>{product.productFreshness}</td>
                   <td>{product.productPrice}</td>
                   <td>
                     <button type="button" className="btn btn-danger me-2" onClick={() => konfirmasiHapus(product.id)}>Delete</button>
-                    <button type="button" className="btn btn-success" onClick={() => handleEdit(product.id)}>Edit</button>
+                    <button type="button" className="btn btn-success" onClick={() => editProduk(product.id)}>Edit</button>
                   </td>
                 </tr>
               ))}
@@ -68,8 +91,8 @@ function ProductList({ products, hapusProduk, editProduk }){
               placeholder="Search By Product Name"
               className='bg-white'
               style={{ width: '194px', height: '31px' }}
-              value={searchTerm} // 2. Menghubungkan inputan dengan state
-              onChange={(e) => setSearchTerm(e.target.value)} // 2. Tambahkan fungsi untuk menangani perubahan inputan
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
             /><br />
             <div className="btn-group" role="group" style={{ height: 'auto', width: '135px' }}>
               <input type="radio" className="btn-check btn-hover-primary" name="deleteButton" id="deleteButton" autoComplete="off" checked />

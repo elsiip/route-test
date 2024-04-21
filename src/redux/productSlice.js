@@ -1,36 +1,25 @@
-import { createSlice } from "@reduxjs/toolkit";
-import { v4 as uuidv4 } from "uuid";
+import { createSlice } from '@reduxjs/toolkit';
 
 export const productSlice = createSlice({
-    name: 'products',
-    initialState : {
-        products: [
-            {
-                id: uuidv4(),   
-                productName: "John",       
-                productCategory: "Doe",        
-                productFreshness: "Doe",        
-                productPrice: "Doe",        
-                image: "Doe",        
-                additionalDescription: "Doe",      
-            }
-        ]        
+  name: 'product',
+  initialState: {
+    products: [],
+    productSedangEdit: null,
+    editMode: false,
+  },
+  reducers: {
+    setProducts: (state, action) => {
+      state.products = action.payload;
     },
-    reducers: {
-        addProduct: (state, action) => {
-            state.products.push(action.payload);
-        },
-        deleteProduct: (state, action) => {
-            state.products = state.products.filter(product => product.id !== action.payload);
-        },
-        editProduct: (state, action) => {
-            state.products = state.products.map(product =>
-                product.id === action.payload.id ? action.payload : product
-            );
-        },
+    setProductSedangEdit: (state, action) => {
+      state.productSedangEdit = action.payload;
     },
+    setEditMode: (state, action) => {
+      state.editMode = action.payload;
+    },
+  },
 });
-    
-export const { addProduct, deleteProduct, editProduct } = productSlice.actions;
-    
+
+export const { setProducts, setProductSedangEdit, setEditMode } = productSlice.actions;
+
 export default productSlice.reducer;

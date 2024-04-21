@@ -1,14 +1,29 @@
-import React from 'react';
-import { Link, NavLink, useLocation } from 'react-router-dom';
+import React, { useState }from 'react';
+import { NavLink, useLocation } from 'react-router-dom';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import styles from "../../assets/css/styles.module.css";
+import { auth } from '../../firebase'; // Import auth dari firebase
+import { signOut } from 'firebase/auth'; // Import signOut dari firebase/auth
+import { useNavigate } from 'react-router-dom';
 
-export default function Navbar() {
+export default function Navbar({ handleLogout }) {
+  const navigate = useNavigate();
   const location = useLocation();
+  const [error, setError] = useState(null); // Add a state variable for the error message
 
   const isHomeActive = location.pathname === "/";
   const isCreateProductActive = location.pathname === "/create-product";
+  const isLoginActive = location.pathname === "/login";
+  const isRegisterActive = location.pathname === "/register";
 
+  async function handleSignOut() {
+    try {
+      await signOut(auth);
+      navigate("/login")
+    } catch (error) {
+      console.log(error);
+    }
+  }
   return (
     <div>
       <div className={styles.header}>
@@ -26,6 +41,14 @@ export default function Navbar() {
                 <NavLink className="btn text-primary" style={{fontWeight: '500', fontSize: '16px'}} to="/pricing">Pricing</NavLink>
                 <NavLink className="btn text-primary" style={{fontWeight: '500', fontSize: '16px'}} to="/faqs">FAQs</NavLink>
                 <NavLink className="btn text-primary" style={{fontWeight: '500', fontSize: '16px'}} to="/about">About</NavLink>
+                {isLoginActive || isRegisterActive ? ( // Conditional rendering for login/register buttons
+                  <>
+                    <NavLink className={isLoginActive ? "btn btn-primary" : "btn text-primary"} style={{fontWeight: '500', fontSize: '16px'}} to="/login">Log In</NavLink>
+                    <NavLink className={isRegisterActive ? "btn btn-primary" : "btn text-primary"} style={{fontWeight: '500', fontSize: '16px'}} to="/register">Register</NavLink>
+                  </>
+                ) : (
+                  <button onClick={handleSignOut} className="btn text-primary" style={{fontWeight: '500', fontSize: '16px'}}>Log Out</button>
+                )}
               </div>
             </div>
           </div>

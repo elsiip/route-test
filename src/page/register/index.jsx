@@ -1,9 +1,12 @@
+import { useState } from 'react';
 import { Formik, Form, Field, ErrorMessage } from 'formik';
 import * as Yup from 'yup';
 import Navbar from "../../components/navbar";
 import styles from "../../assets/css/styles.module.css";
 import 'bootstrap/dist/css/bootstrap.min.css';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+import { createUserWithEmailAndPassword } from 'firebase/auth';
+import { auth } from '../../firebase';
 
 const validationSchema = Yup.object().shape({
   firstName: Yup.string()
@@ -25,18 +28,26 @@ const validationSchema = Yup.object().shape({
 });
 
 export default function Register() {
-  const initialValues = {
-    firstName: '',
-    lastName: '',
-    username: '',
-    email: '',
-    password: '',
-    confirmPassword: '',
-  };
+  const navigate = useNavigate();
+  const [errorMessage, setErrorMessage] = useState('');
 
-  const onSubmit = (values) => {
-    // Handle form submission here
-    console.log(values);
+  const onSubmit = async (values, { setSubmitting }) => {
+    try {
+      const { email, password } = values;
+      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+      const token = await userCredential.user.getIdToken(); // Mendapatkan token dari user
+      // Simpan token di localStorage
+      localStorage.setItem('authToken', token);
+      // Redirect ke halaman pembuatan produk setelah registrasi berhasil
+      navigate('/create-product');
+    } catch (error) {
+      console.error("Error during registration:", error);
+      // Set pesan kesalahan jika registrasi gagal karena kesalahan
+      setErrorMessage("Gagal mendaftar. Silakan coba lagi nanti.");
+    } finally {
+      // Pastikan untuk mengatur submitting menjadi false terlepas dari hasilnya
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -53,11 +64,18 @@ export default function Register() {
               </Link>
             </h3>
             <Formik
-              initialValues={initialValues}
+              initialValues={{
+                firstName: '',
+                lastName: '',
+                username: '',
+                email: '',
+                password: '',
+                confirmPassword: '',
+              }}
               validationSchema={validationSchema}
               onSubmit={onSubmit}
             >
-              {({ errors, touched }) => (
+              {({ errors, touched, isSubmitting }) => (
                 <Form className="needs-validation mt-4">
                   <div className="row">
                     <div className="col-md-4">
@@ -94,8 +112,9 @@ export default function Register() {
                       <Field type="password" name="confirmPassword" className={`form-control ${errors.confirmPassword && touched.confirmPassword ? 'is-invalid' : ''}`} style={{ width: '418px' }} />
                       <ErrorMessage name="confirmPassword" component="div" className="invalid-feedback" />
                     </div>
+                    <div className="col-12 text-danger mt-2">{errorMessage}</div>
                     <div className="">
-                      <button type="submit" className="btn btn-primary btn-create mt-4" style={{ width: ' 418px' }}>Register</button>
+                      <button type="submit" className="btn btn-primary btn-create mt-4" style={{ width: ' 418px' }} disabled={isSubmitting}>Register</button>
                     </div>
                   </div>
                 </Form>
@@ -108,5 +127,5 @@ export default function Register() {
         </div>
       </div>
     </div>
-  )
+  );
 }

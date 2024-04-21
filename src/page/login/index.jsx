@@ -4,7 +4,9 @@ import * as Yup from 'yup';
 import Navbar from "../../components/navbar";
 import styles from "../../assets/css/styles.module.css";
 import 'bootstrap/dist/css/bootstrap.min.css';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+import { signInWithEmailAndPassword } from 'firebase/auth';
+import { auth } from '../../firebase';
 
 const validationSchema = Yup.object().shape({
   email: Yup.string()
@@ -16,26 +18,25 @@ const validationSchema = Yup.object().shape({
 });
 
 export default function Login() {
+  const navigate = useNavigate();
   const [errorMessage, setErrorMessage] = useState('');
 
-  const initialValues = {
-    email: '',
-    password: '',
-  };
+  const handleLogin = async (values, { setSubmitting }) => {
+    try {
+      const { email, password } = values;
+      const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      const token = await userCredential.user.getIdToken(); // Get user token
+      
+      // Store token in local storage
+      localStorage.setItem('authToken', token);
 
-  const onSubmit = (values, { setSubmitting }) => {
-    // Simulate API call for login
-    setTimeout(() => {
+      navigate('/create-product');
+    } catch (error) {
+      setErrorMessage("Failed to Login. Please check your email and password");
+    } finally {
       setSubmitting(false);
-      // Check login credentials here
-      if (values.email === 'example@example.com' && values.password === 'password') {
-        // Redirect or handle successful login
-        console.log('Login successful');
-      } else {
-        setErrorMessage('Invalid email or password');
-      }
-    }, 500);
-  };
+    }
+  }
 
   return (
     <div className={styles['body']}>
@@ -51,9 +52,9 @@ export default function Login() {
               </Link>
             </h3>
             <Formik
-              initialValues={initialValues}
+              initialValues={{ email: '', password: '' }}
               validationSchema={validationSchema}
-              onSubmit={onSubmit}
+              onSubmit={handleLogin}
             >
               {({ errors, touched, isSubmitting }) => (
                 <Form className="needs-validation mt-5 pt-2">

@@ -1,12 +1,14 @@
 import React, { useState, useEffect } from 'react';
+import 'bootstrap/dist/css/bootstrap.min.css';
+import axios from 'axios'; // Import axios
 
-function ProductForm({ tambahProduk, produkSedangEdit, editMode, simpanEditProduk}){
+function ProductForm({ tambahProduk, produkSedangEdit, editMode, simpanEditProduk }) {
     const [formData, setFormData] = useState({
         productName: '',
         productCategory: '',
         productFreshness: '',
         productPrice: '',
-        image: '',
+        imageProduct: null,
         additionalDescription: ''
     });
 
@@ -23,6 +25,25 @@ function ProductForm({ tambahProduk, produkSedangEdit, editMode, simpanEditProdu
         }
     }, [produkSedangEdit]);
 
+    useEffect(() => {
+        fetchImageProduct();
+    }, []);
+
+    const fetchImageProduct = async () => {
+        try {
+            const response = await fetch('https://6624041b04457d4aaf9b7041.mockapi.io/products');
+            const data = await response.json();
+            const randomIndex = Math.floor(Math.random() * response.data.length);
+            const randomProduct = response.data[randomIndex];
+            setFormData(prevState => ({
+                ...prevState,
+                productImage: randomProduct.productImage 
+            }));
+        } catch (error) {
+            console.error('Error fetching data:', error);
+        }
+    }
+
     const handleChange = (e) => {
         const { name, value, type, files } = e.target;
         setFormData(prevState => ({
@@ -37,10 +58,10 @@ function ProductForm({ tambahProduk, produkSedangEdit, editMode, simpanEditProdu
             if (!nameRegex.test(value)) {
                 setProductNameError('Product Name must contain only letters, numbers, and spaces.');
             } else if (value.length > 25) {
-                setProductNameError('Product Name must not exceed 25 characters.');           
+                setProductNameError('Product Name must not exceed 25 characters.');
             } else if (value.length > 10) {
                 setProductNameError('Product Name must not exceed 10 characters.');
-            }else if (value === '') {
+            } else if (value === '') {
                 setProductNameError('Please enter a valid product name.');
             } else {
                 setProductNameError('');
@@ -62,16 +83,16 @@ function ProductForm({ tambahProduk, produkSedangEdit, editMode, simpanEditProdu
                 setProductCategoryError('');
             }
         }
-        
+
         if (name === 'productFreshness') {
             if (value === '') {
                 setProductFreshnessError('Please select a product freshness.');
             } else {
                 setProductFreshnessError('');
             }
-        }    
-        if(name == 'addDesc'){
-            if(value.length > 100){
+        }
+        if (name === 'addDesc') {
+            if (value.length > 100) {
                 setAddDescError('Additional Description must not exceed 100 characters.');
             } else {
                 setAddDescError('');
@@ -80,16 +101,32 @@ function ProductForm({ tambahProduk, produkSedangEdit, editMode, simpanEditProdu
         if (name === 'imageProduct') {
             const allowedExtensions = /(\.jpg|\.jpeg|\.png)$/i;
             if (!allowedExtensions.test(files[0].name)) {
-                setProductImageError('Please upload an image with JPG, JPEG, or PNG format.');
+                setImageProductError('Please upload an image with JPG, JPEG, or PNG format.');
             } else {
-                setProductImageError('');
+                setImageProductError('');
             }
             setFormData(prevState => ({
                 ...prevState,
                 [name]: files[0]
             }));
         }
-        
+
+        if (name === 'imageProduct') {
+            const file = e.target.files[0];
+            const reader = new FileReader();
+    
+            reader.onloadend = () => {
+                setFormData(prevState => ({
+                    ...prevState,
+                    imageProduct: reader.result // Store the data URL in formData
+                }));
+            };
+    
+            if (file) {
+                reader.readAsDataURL(file); // Convert the file to a data URL
+            }
+        }
+
         if (type === 'file') {
             setFormData(prevState => ({
                 ...prevState,
@@ -103,74 +140,100 @@ function ProductForm({ tambahProduk, produkSedangEdit, editMode, simpanEditProdu
         }
     };
 
-    const handleSubmit = (e) => {
-    e.preventDefault();
-    
-    let errors = {};
+    const handleSubmit = async (e) => {
+        e.preventDefault();
 
-    if (formData.productName === '') {
-        errors.productName = 'Please enter a valid product name.';
-    }
-    if (!formData.productCategory) {
-        errors.productCategory = 'Please select a product category.';
-    }
-    if (!formData.productFreshness) {
-        errors.productFreshness = 'Please select a product freshness.';
-    }
-    if (!formData.imageProduct) {
-        errors.imageProduct = 'Please upload an image.';
-    }
-    if (formData.productPrice === '') {
-        errors.productPrice = 'Please enter a valid price.';
-    }
-    if (formData.addDesc === '') {
-        errors.addDesc = 'Please enter additional description.';
-    }
+        let errors = {};
 
-    if (Object.keys(errors).length > 0) {
-        setProductNameError(errors.productName || '');
-        setProductCategoryError(errors.productCategory || '');
-        setProductFreshnessError(errors.productFreshness || '');
-        setImageProductError(errors.imageProduct || '');
-        setProductPriceError(errors.productPrice || '');
-        setAddDescError(errors.addDesc || '');
-        return;
-    }
+        if (formData.productName === '') {
+            errors.productName = 'Please enter a valid product name.';
+        }
+        if (!formData.productCategory) {
+            errors.productCategory = 'Please select a product category.';
+        }
+        if (!formData.productFreshness) {
+            errors.productFreshness = 'Please select a product freshness.';
+        }
+        if (!formData.imageProduct) {
+            errors.imageProduct = 'Please upload an image.';
+        }
+        if (formData.productPrice === '') {
+            errors.productPrice = 'Please enter a valid price.';
+        }
+        if (formData.addDesc === '') {
+            errors.addDesc = 'Please enter additional description.';
+        }
 
-    if (editMode) {
-        simpanEditProduk(formData); 
-    } else {
-        tambahProduk(formData);
-    }
+        if (Object.keys(errors).length > 0) {
+            setProductNameError(errors.productName || '');
+            setProductCategoryError(errors.productCategory || '');
+            setProductFreshnessError(errors.productFreshness || '');
+            setImageProductError(errors.imageProduct || '');
+            setProductPriceError(errors.productPrice || '');
+            setAddDescError(errors.addDesc || '');
+            return;
+        }
 
-    setFormData({
-        productName: '',
-        productCategory: '',
-        productFreshness: '',
-        addDesc: '',
-        productPrice: '',
-        imageProduct: null 
-    });
+        const formDataToSend = new FormData();
+        formDataToSend.append('productName', formData.productName);
+        formDataToSend.append('productCategory', formData.productCategory);
+        formDataToSend.append('productFreshness', formData.productFreshness);
+        formDataToSend.append('productPrice', formData.productPrice);
+        formDataToSend.append('imageProduct', formData.imageProduct);
+        formDataToSend.append('addDesc', formData.addDesc);
 
-    // Reset all errors
-    setProductNameError('');
-    setProductCategoryError('');
-    setProductFreshnessError('');
-    setImageProductError('');
-    setProductPriceError('');
-    setAddDescError('');
-};
+        if (editMode) {
+            simpanEditProduk(formData);
+        } else {
+            try {
+                await axios.post('https://6624041b04457d4aaf9b7041.mockapi.io/products', formData);
+                alert("Data submitted successfully");
+                setFormData({
+                    productName: '',
+                    productCategory: '',
+                    productFreshness: '',
+                    addDesc: '',
+                    productPrice: '',
+                    imageProduct: null
+                });
 
-    
+                // Reset all errors
+                setProductNameError('');
+                setProductCategoryError('');
+                setProductFreshnessError('');
+                setImageProductError('');
+                setProductPriceError('');
+                setAddDescError('');
+            } catch (error) {
+                console.error('Error submitting data:', error);
+            }
+        }
+    };
+
+
     const handleButtonClick = () => {
-        const randomNumber = Math.floor(Math.random() * 100) + 1; 
+        const randomNumber = Math.floor(Math.random() * 100) + 1;
         console.log('Random number:', randomNumber);
+    };
+
+    const handleImageChange = (event) => {
+        const file = event.target.files[0];
+        const reader = new FileReader();
+
+        reader.onloadend = () => {
+            // Update your state here with the file or the data URL of the image
+            setFormData({ ...formData, productImage: reader.result });
+        };
+
+        if (file) {
+            reader.readAsDataURL(file);
+        }
     };
 
     return (
         <div>
             <h3 className="font-weight-medium color-primary">Detail Product</h3>
-            <form onSubmit={handleSubmit} className="needs-validation" noValidate>
+            <form onSubmit={handleSubmit} className="needs-validation" noValidat encType='multipart/form-data'>
                 <div className="row">
                     <div className="form-group" style={{ width: '300px' }}>
                         <label htmlFor="productName" className="font-weight-normal text-form color-primary mt-2 mb-2">Product Name</label>
@@ -199,7 +262,7 @@ function ProductForm({ tambahProduk, produkSedangEdit, editMode, simpanEditProdu
                         <div className="form-group">
                             <label htmlFor="" className="font-weight-normal text-form color-primary mt-2 mb-2">Product Freshness</label>
                             <div className="form-check">
-                                <input className="form-check-input" type="radio" name="productFreshness" id="brandNew" value="Brand New" checked={formData.productFreshness === 'Brand New'} onChange={handleChange}  required />
+                                <input className="form-check-input" type="radio" name="productFreshness" id="brandNew" value="Brand New" checked={formData.productFreshness === 'Brand New'} onChange={handleChange} required />
                                 <label className="form-check-label" htmlFor="brandNew">
                                     Brand New
                                 </label>
@@ -222,7 +285,7 @@ function ProductForm({ tambahProduk, produkSedangEdit, editMode, simpanEditProdu
                     <div className="col-sm-12">
                         <div className="form-group">
                             <label htmlFor="addDesc" className="font-weight-normal text-form color-primary mt-2 mb-2">Additional Description</label>
-                            <textarea name="addDesc" className={`form-control ${addDescError ? 'is-invalid' : ''}`} id="addDesc" style={{ width: '603px', height: '116px' }} value={formData.addDesc} onChange={handleChange}  required></textarea>
+                            <textarea name="addDesc" className={`form-control ${addDescError ? 'is-invalid' : ''}`} id="addDesc" style={{ width: '603px', height: '116px' }} value={formData.addDesc} onChange={handleChange} required></textarea>
                             {addDescError && <div className="text-danger">{addDescError}</div>}
                         </div>
                     </div>
@@ -243,4 +306,4 @@ function ProductForm({ tambahProduk, produkSedangEdit, editMode, simpanEditProdu
     );
 }
 
-export default ProductForm
+export default ProductForm;
